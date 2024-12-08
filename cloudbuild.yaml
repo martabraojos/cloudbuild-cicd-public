@@ -1,0 +1,35 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'europe-west1-docker.pkg.dev/king-dap-learning-sandbox/python-apps-marta/demo-flask-app-marta:$COMMIT_SHA', '.']
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'europe-west1-docker.pkg.dev/king-dap-learning-sandbox/python-apps-marta/demo-flask-app-marta:$COMMIT_SHA']
+  
+- name: 'europe-west1-docker.pkg.dev/king-dap-learning-sandbox/python-apps-marta/demo-flask-app-marta:$COMMIT_SHA'
+  entrypoint: 'bash'
+  args:
+   - '-c'
+   - |
+      python -m pytest
+  
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+   - 'run'
+   - 'deploy'
+   - 'py-bq-load'
+   - '--image'
+   - 'europe-west1-docker.pkg.dev/king-dap-learning-sandbox/python-apps-marta/demo-flask-app-marta:$COMMIT_SHA'
+   - '--region'
+   - 'europe-west1'
+   - '--allow-unauthenticated'
+images:
+- 'europe-west1-docker.pkg.dev/king-dap-learning-sandbox/python-apps-marta/demo-flask-app-marta:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+
+## I will run with  
+## gcloud builds submit --config=cloudbuild.yaml \
+## --service-account=projects/king-dap-learning-sandbox/serviceAccounts/test-service-account-marta@king-dap-learning-sandbox.iam.gserviceaccount.com  
